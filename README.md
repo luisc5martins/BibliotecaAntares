@@ -1,97 +1,158 @@
-# Template de projeto Django com DRF e PDM
+# 📚 Biblioteca Antares
 
-Esse é um template de projeto Django com DRF, PDM e muito mais. Ele já vem com algumas configurações e pacotes pré-instalados, como o PDM, Django, Django REST Framework, PostgreSQL, SQLite, Swagger, black, isort, Render, Cloudinary, Corsheaders, Django-Extensions, Django-Filter, dotenv, dj-database-url, drf-spectacular, gunicorn, netifaces, rest-framework-simplejwt, whitenoise e passage.id
+Sistema web para gerenciamento da biblioteca corporativa da **Antares**, desenvolvido para facilitar o controle do acervo, usuários, reservas e empréstimos de livros.
 
-Esse template já está pronto para ser utilizado em produção, com o [Render](http://render.com) e o [PostgreSQL](https://www.postgresql.org/). Mas também pode ser utilizado em desenvolvimento, com o [PDM](https://pdm.fming.dev/) e o [SQLite](https://www.sqlite.org/index.html).
+## 🎯 Objetivo
 
-O template também já vem com alguns arquivos de configuração pré-configurados, como:
+Centralizar e organizar o gerenciamento da biblioteca da empresa, permitindo que colaboradores consultem e reservem livros, enquanto o **RH** administra o acervo, aprova os cadastros e controla as retiradas e devoluções.
 
-- `pyproject.toml`: Arquivo de configuração do PDM.
-- `Procfile`: Arquivo de configuração do Fl0.
-- `settings.py`: Arquivo de configuração do Django.
-- `urls.py`: Arquivo de configuração das rotas do Django.
-- `wsgi.py`: Arquivo de configuração do Gunicorn.
-- `.env.exemplo`: Arquivo de exemplo de configuração das variáveis de ambiente.
-- `.gitignore`: Arquivo de configuração do Git, para ignorar arquivos e diretórios.
+## ✨ Funcionalidades
 
-O template também traz o usuário padrão modificado, com o login sendo feito com o `e-mail` e não com o `username`. Inclusões de campos, como `telefone`, `data de nascimento` e `foto de perfil`, podem ser feitas facilmente.
+### 👤 Colaboradores
 
-O projeto Django criado chama-se `app` e a aplicação Django criada chama-se `core`. O projeto já vem com um modelo de usuário customizado, com autenticação pelo `passage.id`. Arquivos estáticos, como fotos, podem ser armazenados no [Cloudinary](https://cloudinary.com/).
+* Cadastro de novos usuários;
+* Acompanhamento da aprovação do cadastro;
+* Consulta do catálogo de livros;
+* Pesquisa por título, autor e categoria;
+* Reserva de livros disponíveis;
+* Consulta das próprias reservas;
+* Consulta dos empréstimos atuais;
+* Consulta do histórico de empréstimos.
 
-O projeto também já vem com a documentação da API, gerada automaticamente pelo Swagger, e com a formatação de código Python, feita pelo black e pelo isort.
+### 🧑‍💼 RH
 
-## Instalação e Configuração
+* Aprovação ou recusa de cadastros;
+* Consulta dos usuários cadastrados;
+* Cadastro de novos livros;
+* Edição das informações dos livros;
+* Controle da disponibilidade dos livros;
+* Visualização das reservas;
+* Registro da retirada dos livros;
+* Registro da devolução dos livros;
+* Consulta do histórico de empréstimos.
 
-1. Certifique-se de ter o [Python](https://www.python.org/) instalado em seu sistema.
+> **Importante:** livros e registros de empréstimos não são excluídos do sistema. Quando um livro deixa de fazer parte do acervo, sua disponibilidade pode ser alterada, preservando todo o histórico.
 
-2. Crie um novo projeto a partir desse template:
-- Acesse o _template_ em https://github.com/marrcandre/template_django_pdm.
-- Clique no botão `Use this template` em `Create a new repository`.
-- Preencha as informações solicitadas:
-  - `Owner`: <seu usuário no GitHub>
-  - `Repository name`: `livraria`
-- Click no botão `Create repository`.
+## 🔄 Fluxo da Biblioteca
 
-3. Abra o projeto no vscode e execute o terminal.
+```text
+┌──────────────────┐
+│    Colaborador   │
+│   cria cadastro  │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│ Cadastro pendente│
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│        RH        │
+│ verifica vínculo │
+└────────┬─────────┘
+         │
+    ┌────┴────┐
+    │         │
+    ▼         ▼
+ APROVA     RECUSA
+    │
+    ▼
+┌──────────────────┐
+│ Usuário aprovado │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│ Consulta livros  │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│      Reserva     │
+│   Data + Hora    │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│       RH         │
+│ Confirma retirada│
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│    Empréstimo    │
+│   Data + Hora    │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│     Devolução    │
+│   Data + Hora    │
+└──────────────────┘
+```
 
-2. Crie um ambiente virtual usando o [PDM](https://pdm.fming.dev/):
+## 📖 Controle de empréstimos
 
-   ```
-   pdm install
-   ```
+Cada empréstimo mantém o histórico das principais etapas:
 
-3. Crie o arquivo .env, a partir do arquivo .env.exemplo, e configure as variáveis de ambiente:
+| Evento    | Informações registradas                |
+| --------- | -------------------------------------- |
+| Reserva   | Data e hora da reserva                 |
+| Retirada  | Data e hora da retirada e responsável  |
+| Devolução | Data e hora da devolução e responsável |
 
-   ```
-   cp .env.exemplo .env
-   ```
+Dessa forma, é possível acompanhar todo o ciclo do livro, desde a reserva até sua devolução.
 
-4. Execute o servidor de desenvolvimento:
+## 🔐 Perfis e permissões
 
-   ```
-   pdm run dev
-   ```
+| Ação                        | Colaborador |  RH |
+| --------------------------- | :---------: | :-: |
+| Criar cadastro              |      ✅      |  —  |
+| Aprovar usuário             |      ❌      |  ✅  |
+| Recusar usuário             |      ❌      |  ✅  |
+| Consultar livros            |      ✅      |  ✅  |
+| Reservar livro              |      ✅      |  ✅  |
+| Cadastrar livro             |      ❌      |  ✅  |
+| Editar livro                |      ❌      |  ✅  |
+| Excluir livro               |      ❌      |  ❌  |
+| Registrar retirada          |      ❌      |  ✅  |
+| Registrar devolução         |      ❌      |  ✅  |
+| Consultar próprio histórico |      ✅      |  ✅  |
+| Consultar histórico geral   |      ❌      |  ✅  |
 
-5. Acesse a API em http://localhost:19003/api/
+## 🛠️ Tecnologias
 
-## Uso da API
+* **Python**
+* **PDM**
+* **Banco de dados relacional**
+* **HTML5**
+* **CSS3**
+* **JavaScript**
 
-A documentação completa dos endpoints da API e exemplos de uso estão disponíveis na [Documentação da API](http://localhost:19003/api/swagger/).
+## 🚧 Status do projeto
 
-## Comandos Úteis
+> 🟡 **Em desenvolvimento**
 
-- `pdm run dev`: Executa o servidor de desenvolvimento. Antes de executar o servidor, descobre o endereço IP da máquina e atualiza o arquivo `.env` com o endereço IP.
-- `pdm run migrate`: Executa as migrações do banco de dados. Antes de executar o `migrate`, executa o `makemigrations`. Depois de executar o `migrate`, executa o `graph_models`, atualizando o diagrama de classes dos modelos do projeto.
-- Para mais detalhes, consulte o arquivo `pyproject.toml`, na seção `[tool.pdm.scripts]`.
+O sistema está sendo desenvolvido de forma incremental, começando pelas funcionalidades essenciais de usuários, livros, reservas e empréstimos.
 
-## Detalhes do Projeto
+## 📌 Regras importantes
 
-Esse projeto utiliza os seguintes pacotes e tecnologias:
+* O cadastro de novos colaboradores depende de aprovação do RH.
+* Somente usuários aprovados podem utilizar o sistema.
+* O RH é responsável pelo gerenciamento do acervo.
+* O RH pode **inserir e editar livros**, mas não pode excluí-los.
+* Retiradas e devoluções são registradas pelo RH.
+* O histórico de reservas e empréstimos deve ser preservado.
+* A data e hora das reservas, retiradas e devoluções são registradas no sistema.
 
-- [PDM](https://pdm.fming.dev/): Gerenciador de pacotes e ambiente virtual para Python.
-- [Django](https://www.djangoproject.com/): Framework web de alto nível escrito em Python.
-- [Django REST Framework](https://www.django-rest-framework.org/): Framework para desenvolvimento de APIs REST com Django.
-- [PostgreSQL](https://www.postgresql.org/): Banco de dados relacional, utilizado no ambiente de produção.
-- [SQLite](https://www.sqlite.org/index.html): Banco de dados relacional, utilizado no ambiente de desenvolvimento.
-- [Swagger](https://swagger.io/): Framework para documentação de APIs REST.
-- [Ruff] (http://https://docs.astral.sh/ruff/): Linter e formatador de código Python, escrito em Rust.
-- [Render](http://render.com): Ferramenta de _deploy_ de aplicações _backend_.
-- [Cloudinary](https://cloudinary.com/): Serviço de armazenamento de arquivos estáticos em nuvem.
-- [Corsheaders](https://pypi.org/project/django-cors-headers/): Pacote para permitir que aplicações frontend acessem a API.
-- [Django-Extensions](https://django-extensions.readthedocs.io/en/latest/): Pacote com extensões para o Django, como o `shell_plus`, que permite acessar o shell do Django com todos os modelos importados e o comando `graph_models`, que gera um diagrama de classes dos modelos do projeto.
-- [Django-Filter](https://django-filter.readthedocs.io/en/stable/): Pacote para filtragem, ordenação e paginação de dados em APIs REST.
-- [dotenv](https://pypi.org/project/python-dotenv/): Pacote para carregar variáveis de ambiente a partir de um arquivo `.env`.
-- [dj-database-url](https://pypi.org/project/dj-database-url/): Pacote para configurar o banco de dados a partir de uma URL.
-- [drf-spectacular](https://drf-spectacular.readthedocs.io/en/latest/): Pacote para geração de documentação de APIs REST com o Swagger.
-- [gunicorn](https://gunicorn.org/): Pacote para servir aplicações Django em produção.
-- [netifaces](https://pypi.org/project/netifaces/): Pacote para obter o endereço IP da máquina.
-- [rest-framework-simplejwt](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/): Pacote para autenticação JWT em APIs REST.
-- [whitenoise](http://whitenoise.evans.io/en/stable/): Pacote para servir arquivos estáticos em aplicações Django.
-- [passage.id](https://passage.id): Pacote para autenticação de usuários.
+## 👨‍🏫 Agradecimentos
 
-## Licença
+Agradeço aos professores **[@marrcandre](https://github.com/marrcandre)** e **[@eduardo-da-silva](https://github.com/eduardo-da-silva)**, que fizeram parte da minha formação e contribuíram para minha trajetória na área de tecnologia.
 
-Este projeto está licenciado sob a [Licença GPL](https://www.gnu.org/licenses/gpl-3.0.html), uma licença de software livre.
+O projeto utiliza como base o **template disponibilizado por [@marrcandre](https://github.com/marrcandre)** e teve como material de apoio os **vídeos e tutoriais disponibilizados por [@eduardo-da-silva](https://github.com/eduardo-da-silva)**.
 
+---
 
-
+**Biblioteca Antares**
+Sistema interno para gerenciamento do acervo e empréstimos da biblioteca corporativa.
