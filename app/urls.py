@@ -1,3 +1,4 @@
+from click.utils import R
 from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import (
@@ -6,6 +7,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 from rest_framework.routers import DefaultRouter
+from core.models.editora import Editora
 from core.views import (
     CustomTokenObtainPairView,
     CustomTokenRefreshView,
@@ -13,12 +15,13 @@ from core.views import (
     UserRegistrationView,
     UserViewSet,
 )
-from core.views import CategoriaViewSet, UserViewSet
+from core.views import CategoriaViewSet, UserViewSet, EditoraViewSet
 
 router = DefaultRouter()
 
 router.register(r'categorias', CategoriaViewSet, basename='categorias')
 router.register(r'usuarios', UserViewSet, basename='usuarios')
+router.register(r'editoras', EditoraViewSet, basename='editoras')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
