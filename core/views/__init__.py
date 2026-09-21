@@ -2,3 +2,4 @@ from .token import CustomTokenObtainPairView, CustomTokenRefreshView, CustomToke
 from .user import UserRegistrationView, UserViewSet
 from .categoria import CategoriaViewSet
 from .editora import EditoraViewSet
+from .autor import AutorViewSet
