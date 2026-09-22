@@ -25,6 +25,7 @@ dependencies = [
   'setuptools>=68.2.2',
   'uvicorn>=0.29.0',
   'whitenoise[brotli]>=6.6.0',
+  "pyparsing<3.2",
 ]
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -41,7 +42,7 @@ dev = "python manage.py runserver 127.0.0.1:8000"
 createsuperuser = "python manage.py createsuperuser"
 pre_migrate = "python manage.py makemigrations"
 migrate = "python manage.py migrate"
-post_migrate = "python manage.py graph_models -S -g -o core.png core"
+post_migrate = "python manage.py graph_models --disable-sort-fields -S -g -o core.png core uploader"
 shell = "python manage.py shell"
 shellp = "python manage.py shell_plus"
 test = "python manage.py test"
