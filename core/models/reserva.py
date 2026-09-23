@@ -20,7 +20,7 @@ class Reserva(models.Model):
     data_criacao = models.DateTimeField(
         auto_now_add=True
     )
-    
+
     data_atualizacao = models.DateTimeField(
         auto_now=True
     )
@@ -50,7 +50,7 @@ class ItensReserva(models.Model):
     livro = models.ForeignKey(
         Livro,
         on_delete=models.PROTECT,
-        related_name='+'
+        related_name='itens_reserva'
     )
 
     def save(self, *args, **kwargs):

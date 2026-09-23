@@ -1,35 +1,41 @@
-from rest_framework.serializers import CharField, ModelSerializer, CurrentUserDefault, HiddenField, ValidationError, DateTimeField
+from rest_framework.serializers import (
+    CharField,
+    ModelSerializer,
+    CurrentUserDefault,
+    HiddenField,
+)
 from core.models import Reserva, ItensReserva
 from django.db import transaction
+
 
 class ItensReservaSerializer(ModelSerializer):
     class Meta:
         model = ItensReserva
         fields = ('livro',)
 
+
 class ReservaSerializer(ModelSerializer):
     usuario = CharField(source='usuario.email', read_only=True)
     status = CharField(source='get_status_display', read_only=True)
-    data = DateTimeField(read_only=True)
     itens = ItensReservaSerializer(many=True, read_only=True)
+
     class Meta:
         model = Reserva
-        fields = ('id', 'usuario', 'status', 'data_criacao', 'data_atualizacao',)
+        fields = (
+            'id',
+            'usuario',
+            'status',
+            'data_criacao',
+            'data_atualizacao',
+            'itens',
+        )
+
 
 class ItensReservaCreateUpdateSerializer(ModelSerializer):
     class Meta:
         model = ItensReserva
         fields = ('livro',)
 
-    def validate_quantidade(self, quantidade):
-        if quantidade <= 0:
-            raise ValidationError('A quantidade deve ser maior do que zero.')
-        return quantidade
-    
-    def validate(self, item):
-        if item['quantidade'] > item['livro'].quantidade:
-            raise ValidationError('Quantidade de itens maior do que a quantidade em estoque.')
-        return item
 
 class ReservaCreateUpdateSerializer(ModelSerializer):
     usuario = HiddenField(default=CurrentUserDefault())
@@ -39,13 +45,28 @@ class ReservaCreateUpdateSerializer(ModelSerializer):
         model = Reserva
         fields = ('id', 'usuario', 'itens')
 
+    @transaction.atomic
+    def create(self, validated_data):
+        itens = validated_data.pop('itens', [])
+
+        reserva = Reserva.objects.create(**validated_data)
+
+        for item in itens:
+            ItensReserva.objects.create(
+                reserva=reserva,
+                **item
+            )
+
+        return reserva
+
+
 class ItensReservaListSerializer(ModelSerializer):
     livro = CharField(source='livro.titulo', read_only=True)
 
     class Meta:
         model = ItensReserva
         fields = ('livro',)
-        depth = 1
+
 
 class ReservaListSerializer(ModelSerializer):
     usuario = CharField(source='usuario.email', read_only=True)
@@ -54,14 +75,3 @@ class ReservaListSerializer(ModelSerializer):
     class Meta:
         model = Reserva
         fields = ('id', 'usuario', 'itens')
-
-    @transaction.atomic
-    def update(self, reserva, validated_data):
-        itens = validated_data.pop('itens', None)
-        reserva = Reserva.objects.create(**validated_data)
-        if itens is not None:
-            reserva.itens.all().delete()
-            for item in itens:
-                ItensReserva.objects.create(reserva=reserva, **item)
-        reserva.save()
-        return super().update(reserva, validated_data)
