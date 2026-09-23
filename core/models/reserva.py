@@ -3,7 +3,6 @@ from .livro import Livro
 from .user import User
 
 class Reserva(models.Model):
-
     class StatusReserva(models.IntegerChoices):
         RESERVADO = 1, 'Reservado'
         RETIRADO = 2, 'Retirado'
