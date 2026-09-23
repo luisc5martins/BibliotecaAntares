@@ -1,11 +1,10 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-
 from drf_spectacular.utils import extend_schema
-
 from core.models import Livro, Reserva
 from core.serializers import LivroSerializer
 from core.serializers.livro import LivroMaisReservadoSerializer, LivroListSerializer, LivroRetrieveSerializer
@@ -13,6 +12,9 @@ from core.serializers.livro import LivroMaisReservadoSerializer, LivroListSerial
 class LivroViewSet(ModelViewSet):
     queryset = Livro.objects.all()
     serializer_class = LivroSerializer
+
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['categoria__descricao', 'editora__nome']
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -45,12 +47,12 @@ class LivroViewSet(ModelViewSet):
         ).filter(
             total_reservas__gt=10
         ).order_by('-total_reservas')
-    
+
         serializer = LivroMaisReservadoSerializer(
             livros,
             many=True
         )
-    
+
         if not serializer.data:
             return Response(
                 {
@@ -58,7 +60,7 @@ class LivroViewSet(ModelViewSet):
                 },
                 status=status.HTTP_200_OK
             )
-    
+
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
