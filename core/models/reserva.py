@@ -35,7 +35,6 @@ class Reserva(models.Model):
             item.livro.save(update_fields=['status'])
 
 class ItensReserva(models.Model):
-
     reserva = models.ForeignKey(
         Reserva,
         on_delete=models.CASCADE,
