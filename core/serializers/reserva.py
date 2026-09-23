@@ -1,4 +1,4 @@
-from rest_framework.serializers import CharField, ModelSerializer, CurrentUserDefault, HiddenField
+from rest_framework.serializers import CharField, ModelSerializer, CurrentUserDefault, HiddenField, ValidationError
 from core.models import Reserva, ItensReserva
 from django.db import transaction
 
@@ -19,6 +19,16 @@ class ItensReservaCreateUpdateSerializer(ModelSerializer):
     class Meta:
         model = ItensReserva
         fields = ('livro',)
+
+    def validate_quantidade(self, quantidade):
+        if quantidade <= 0:
+            raise ValidationError('A quantidade deve ser maior do que zero.')
+        return quantidade
+    
+    def validate(self, item):
+        if item['quantidade'] > item['livro'].quantidade:
+            raise ValidationError('Quantidade de itens maior do que a quantidade em estoque.')
+        return item
 
 class ReservaCreateUpdateSerializer(ModelSerializer):
     usuario = HiddenField(default=CurrentUserDefault())
