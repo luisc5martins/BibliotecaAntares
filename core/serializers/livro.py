@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer, SlugRelatedField
+from rest_framework.serializers import ModelSerializer, SlugRelatedField, IntegerField, ModelSerializer
 from core.models import Livro
 from uploader.models import Image
 from uploader.serializers import ImageSerializer
@@ -29,3 +29,10 @@ class LivroRetrieveSerializer(ModelSerializer):
         model = Livro
         fields = '__all__'
         depth = 1
+
+class LivroMaisReservadoSerializer(ModelSerializer):
+    total_reservas = IntegerField()
+
+    class Meta:
+        model = Livro
+        fields = ('id', 'titulo', 'total_reservas')

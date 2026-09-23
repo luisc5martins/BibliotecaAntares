@@ -1,6 +1,14 @@
+from django.db.models import Count, Q
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from core.models import Livro
-from core.serializers import LivroListSerializer, LivroSerializer, LivroRetrieveSerializer
+
+from drf_spectacular.utils import extend_schema
+
+from core.models import Livro, Reserva
+from core.serializers import LivroSerializer
+from core.serializers.livro import LivroMaisReservadoSerializer, LivroListSerializer, LivroRetrieveSerializer
 
 class LivroViewSet(ModelViewSet):
     queryset = Livro.objects.all()
@@ -12,3 +20,46 @@ class LivroViewSet(ModelViewSet):
         elif self.action == 'retrieve':
             return LivroRetrieveSerializer
         return LivroSerializer
+
+    @extend_schema(
+    summary="Lista os livros mais reservados",
+    description="Retorna os livros que foram reservados mais de 10 vezes.",
+    responses={
+        200: LivroMaisReservadoSerializer(many=True)
+    },
+    )
+    @action(detail=False, methods=['get'])
+    def mais_reservados(self, request):
+        livros = Livro.objects.annotate(
+            total_reservas=Count(
+                'itens_reserva__reserva',
+                filter=Q(
+                    itens_reserva__reserva__status__in=[
+                        Reserva.StatusReserva.RESERVADO,
+                        Reserva.StatusReserva.RETIRADO,
+                        Reserva.StatusReserva.DEVOLVIDO,
+                    ]
+                ),
+                distinct=True
+            )
+        ).filter(
+            total_reservas__gt=10
+        ).order_by('-total_reservas')
+    
+        serializer = LivroMaisReservadoSerializer(
+            livros,
+            many=True
+        )
+    
+        if not serializer.data:
+            return Response(
+                {
+                    "detail": "Nenhum livro possui mais de 10 reservas."
+                },
+                status=status.HTTP_200_OK
+            )
+    
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
