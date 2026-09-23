@@ -1,4 +1,4 @@
-from rest_framework.serializers import CharField, ModelSerializer
+from rest_framework.serializers import CharField, ModelSerializer, CurrentUserDefault, HiddenField
 from core.models import Reserva, ItensReserva
 from django.db import transaction
 
@@ -6,7 +6,6 @@ class ItensReservaSerializer(ModelSerializer):
     class Meta:
         model = ItensReserva
         fields = ('livro',)
-        depth = 1
 
 class ReservaSerializer(ModelSerializer):
     usuario = CharField(source='usuario.email', read_only=True)
@@ -22,6 +21,7 @@ class ItensReservaCreateUpdateSerializer(ModelSerializer):
         fields = ('livro',)
 
 class ReservaCreateUpdateSerializer(ModelSerializer):
+    usuario = HiddenField(default=CurrentUserDefault())
     itens = ItensReservaCreateUpdateSerializer(many=True)
 
     class Meta:
