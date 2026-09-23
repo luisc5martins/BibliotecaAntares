@@ -108,7 +108,7 @@ Dessa forma, é possível acompanhar todo o ciclo do livro, desde a reserva até
 
 | Ação                        | Colaborador |  RH |
 | --------------------------- | :---------: | :-: |
-| Criar cadastro              |      ✅      |  —  |
+| Criar cadastro              |      ✅      |  ✅  |
 | Aprovar usuário             |      ❌      |  ✅  |
 | Recusar usuário             |      ❌      |  ✅  |
 | Consultar livros            |      ✅      |  ✅  |
