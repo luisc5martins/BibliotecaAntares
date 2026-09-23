@@ -3,12 +3,10 @@ from rest_framework.serializers import (
     ModelSerializer,
     CurrentUserDefault,
     HiddenField,
+    ValidationError,
 )
 from core.models import Reserva, ItensReserva
 from django.db import transaction
-
-from core.views import reserva
-
 
 class ItensReservaSerializer(ModelSerializer):
     class Meta:
@@ -49,6 +47,21 @@ class ReservaCreateUpdateSerializer(ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         itens = validated_data.pop('itens', [])
+        usuario = validated_data['usuario']
+
+        reserva_ativa = Reserva.objects.filter(
+            usuario=usuario,
+            status__in=[
+                Reserva.StatusReserva.RESERVADO,
+                Reserva.StatusReserva.RETIRADO,
+            ]
+        ).exists()
+
+        if reserva_ativa:
+            raise ValidationError(
+                'O usuário já possui uma reserva ativa. '
+                'É necessário devolver o livro antes de fazer uma nova reserva.'
+            )
 
         reserva = Reserva.objects.create(**validated_data)
 

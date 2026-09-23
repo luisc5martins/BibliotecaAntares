@@ -1,6 +1,6 @@
 from rest_framework.viewsets import ModelViewSet
 from core.models import Reserva
-from core.serializers.reserva import ReservaSerializer
+from core.serializers.reserva import ReservaSerializer, ReservaCreateUpdateSerializer, ReservaListSerializer
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
@@ -9,11 +9,13 @@ from django.db import transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.permissions import IsAuthenticated
 
 
 class ReservaViewSet(ModelViewSet):
     queryset = Reserva.objects.all()
     serializer_class = ReservaSerializer
+    permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'put', 'delete']
 
     def get_queryset(self):
@@ -96,8 +98,17 @@ class ReservaViewSet(ModelViewSet):
             status=status.HTTP_200_OK
         )
 
-    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
-    filterset_fields = ['usuario__email', 'status', 'data']
-    search_fields = ['usuario__email']
-    ordering_fields = ['usuario__email', 'status', 'data']
-    ordering = ['-data']
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return ReservaCreateUpdateSerializer
+
+        if self.action == 'list':
+            return ReservaListSerializer
+
+        return ReservaSerializer
+
+filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
+filterset_fields = ['usuario__email', 'status', 'data_criacao']
+search_fields = ['usuario__email']
+ordering_fields = ['usuario__email', 'status', 'data_criacao']
+ordering = ['-data_criacao']
