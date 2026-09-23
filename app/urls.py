@@ -18,7 +18,7 @@ from core.views import (
     UserRegistrationView,
     UserViewSet,
 )
-from core.views import CategoriaViewSet, UserViewSet, EditoraViewSet, AutorViewSet, LivroViewSet
+from core.views import CategoriaViewSet, UserViewSet, EditoraViewSet, AutorViewSet, LivroViewSet, ReservaViewSet
 
 router = DefaultRouter()
 
@@ -27,6 +27,7 @@ router.register(r'usuarios', UserViewSet, basename='usuarios')
 router.register(r'editoras', EditoraViewSet, basename='editoras')
 router.register(r'autores', AutorViewSet, basename='autores')
 router.register(r'livros', LivroViewSet, basename='livros')
+router.register(r'reservas', ReservaViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
