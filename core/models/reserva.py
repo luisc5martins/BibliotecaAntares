@@ -13,10 +13,16 @@ class Reserva(models.Model):
         on_delete=models.PROTECT,
         related_name='reservas'
     )
-
     status = models.IntegerField(
         choices=StatusReserva.choices,
         default=StatusReserva.RESERVADO
+    )
+    data_criacao = models.DateTimeField(
+        auto_now_add=True
+    )
+    
+    data_atualizacao = models.DateTimeField(
+        auto_now=True
     )
 
     def save(self, *args, **kwargs):

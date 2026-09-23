@@ -1,4 +1,4 @@
-from rest_framework.serializers import CharField, ModelSerializer, CurrentUserDefault, HiddenField, ValidationError
+from rest_framework.serializers import CharField, ModelSerializer, CurrentUserDefault, HiddenField, ValidationError, DateTimeField
 from core.models import Reserva, ItensReserva
 from django.db import transaction
 
@@ -10,10 +10,11 @@ class ItensReservaSerializer(ModelSerializer):
 class ReservaSerializer(ModelSerializer):
     usuario = CharField(source='usuario.email', read_only=True)
     status = CharField(source='get_status_display', read_only=True)
+    data = DateTimeField(read_only=True)
     itens = ItensReservaSerializer(many=True, read_only=True)
     class Meta:
         model = Reserva
-        fields = '__all__'
+        fields = ('id', 'usuario', 'status', 'data_criacao', 'data_atualizacao',)
 
 class ItensReservaCreateUpdateSerializer(ModelSerializer):
     class Meta:
@@ -57,8 +58,10 @@ class ReservaListSerializer(ModelSerializer):
     @transaction.atomic
     def update(self, reserva, validated_data):
         itens = validated_data.pop('itens', None)
+        reserva = Reserva.objects.create(**validated_data)
         if itens is not None:
             reserva.itens.all().delete()
             for item in itens:
                 ItensReserva.objects.create(reserva=reserva, **item)
+        reserva.save()
         return super().update(reserva, validated_data)

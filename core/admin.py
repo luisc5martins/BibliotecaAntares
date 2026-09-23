@@ -91,9 +91,10 @@ class ItensReservaInline(admin.TabularInline):
     
 @register(Reserva)
 class ReservaAdmin(ModelAdmin):
-    list_display = ('usuario', 'status')
-    search_fields = ('usuario', 'status')
-    list_filter = ('usuario', 'status')
-    ordering = ('usuario', 'status')
+    list_display = ('usuario', 'status', 'data_criacao', 'data_atualizacao')
+    ordering = ('usuario', 'status', 'data_criacao')
+    search_fields = ('usuario__email', 'status')
+    list_filter = ('status', 'data_criacao', 'data_atualizacao')
     list_per_page = 10
     inlines = [ItensReservaInline]
+    readonly_fields = ('data_criacao', 'data_atualizacao')
