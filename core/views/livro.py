@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db.models import Count, Q
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -65,3 +66,9 @@ class LivroViewSet(ModelViewSet):
             serializer.data,
             status=status.HTTP_200_OK
         )
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['categoria__descricao', 'editora__nome']
+    search_fields = ['titulo']
+    ordering_fields = ['titulo']
+    ordering = ['titulo']

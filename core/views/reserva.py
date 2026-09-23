@@ -7,6 +7,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db import transaction
 from drf_spectacular.utils import extend_schema
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 class ReservaViewSet(ModelViewSet):
     queryset = Reserva.objects.all()
@@ -92,3 +95,9 @@ class ReservaViewSet(ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
+
+    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
+    filterset_fields = ['usuario__email', 'status', 'data']
+    search_fields = ['usuario__email']
+    ordering_fields = ['usuario__email', 'status', 'data']
+    ordering = ['-data']
