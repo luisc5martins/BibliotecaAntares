@@ -1,5 +1,5 @@
 from django.db import models
-
+from .livro import Livro
 from .user import User
 
 class Reserva(models.Model):
@@ -10,3 +10,7 @@ class Reserva(models.Model):
 
     usuario = models.ForeignKey(User, on_delete=models.PROTECT, related_name='reservas')
     status = models.IntegerField(choices=StatusReserva.choices,  default=StatusReserva.RESERVADO)
+
+class ItensReserva(models.Model):
+    reserva = models.ForeignKey(Reserva, on_delete=models.CASCADE, related_name='itens')
+    livro = models.ForeignKey(Livro, on_delete=models.PROTECT, related_name='+')

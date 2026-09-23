@@ -8,6 +8,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext_lazy as _
 from core.models import Autor, Categoria, Editora, Livro, User, Reserva
 from core import models
+from core.models.reserva import ItensReserva
 
 @register(User)
 class UserAdmin(BaseUserAdmin):
@@ -89,3 +90,11 @@ class ReservaAdmin(ModelAdmin):
     list_display = ('usuario', 'status')
     ordering = ('usuario', 'status')
     list_per_page = 10
+
+@register(ItensReserva)
+class ItensReservaAdmin(ModelAdmin):
+    list_display = ('reserva', 'livro')
+    search_fields = ('livro__titulo',)
+    list_filter = ('reserva',)
+    ordering = ('reserva', 'livro')
+    list_per_page = 25
