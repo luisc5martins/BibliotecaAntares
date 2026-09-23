@@ -1,13 +1,11 @@
-from rest_framework.serializers import CharField, ModelSerializer, SerializerMethodField
+from rest_framework.serializers import CharField, ModelSerializer
 from core.models import Reserva, ItensReserva
 from django.db import transaction
-
-from core.views import reserva
 
 class ItensReservaSerializer(ModelSerializer):
     class Meta:
         model = ItensReserva
-        fields = ('livro')
+        fields = ('livro',)
         depth = 1
 
 class ReservaSerializer(ModelSerializer):
@@ -21,7 +19,7 @@ class ReservaSerializer(ModelSerializer):
 class ItensReservaCreateUpdateSerializer(ModelSerializer):
     class Meta:
         model = ItensReserva
-        fields = ('livro')
+        fields = ('livro',)
 
 class ReservaCreateUpdateSerializer(ModelSerializer):
     itens = ItensReservaCreateUpdateSerializer(many=True)
@@ -31,10 +29,10 @@ class ReservaCreateUpdateSerializer(ModelSerializer):
         fields = ('id', 'usuario', 'itens')
 
     @transaction.atomic
-    def create(self, validated_data):
-        itens = validated_data.pop('itens')
-        reserva = Reserva.objects.create(**validated_data)
-        for item in itens:
-            ItensReserva.objects.create(reserva=reserva, **item)
-        reserva.save()
-        return reserva
+    def update(self, reserva, validated_data):
+        itens = validated_data.pop('itens', None)
+        if itens is not None:
+            reserva.itens.all().delete()
+            for item in itens:
+                ItensReserva.objects.create(reserva=reserva, **item)
+        return super().update(reserva, validated_data)
