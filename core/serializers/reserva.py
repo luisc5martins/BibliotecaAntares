@@ -4,7 +4,8 @@ from core.models import Reserva, ItensReserva
 class ItensReservaSerializer(ModelSerializer):
     class Meta:
         model = ItensReserva
-        fields = '__all__'
+        fields = ('livro', 'quantidade')
+        depth = 1
 
 class ReservaSerializer(ModelSerializer):
     usuario = CharField(source='usuario.email', read_only=True)
