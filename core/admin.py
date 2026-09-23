@@ -85,16 +85,15 @@ class LivroAdmin(ModelAdmin):
     ordering = ('titulo', 'editora', 'categoria')
     list_per_page = 25
 
+class ItensReservaInline(admin.TabularInline):
+    model = ItensReserva
+    extra = 1
+    
 @register(Reserva)
 class ReservaAdmin(ModelAdmin):
     list_display = ('usuario', 'status')
+    search_fields = ('usuario', 'status')
+    list_filter = ('usuario', 'status')
     ordering = ('usuario', 'status')
     list_per_page = 10
-
-@register(ItensReserva)
-class ItensReservaAdmin(ModelAdmin):
-    list_display = ('reserva', 'livro')
-    search_fields = ('livro__titulo',)
-    list_filter = ('reserva',)
-    ordering = ('reserva', 'livro')
-    list_per_page = 25
+    inlines = [ItensReservaInline]
