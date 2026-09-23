@@ -7,6 +7,8 @@ from rest_framework.serializers import (
 from core.models import Reserva, ItensReserva
 from django.db import transaction
 
+from core.views import reserva
+
 
 class ItensReservaSerializer(ModelSerializer):
     class Meta:
@@ -36,7 +38,6 @@ class ItensReservaCreateUpdateSerializer(ModelSerializer):
         model = ItensReserva
         fields = ('livro',)
 
-
 class ReservaCreateUpdateSerializer(ModelSerializer):
     usuario = HiddenField(default=CurrentUserDefault())
     itens = ItensReservaCreateUpdateSerializer(many=True)
@@ -58,6 +59,21 @@ class ReservaCreateUpdateSerializer(ModelSerializer):
             )
 
         return reserva
+
+    @transaction.atomic
+    def update(self, reserva, validated_data):
+        itens = validated_data.pop('itens', [])
+
+        if itens:
+            reserva.itens.all().delete()
+
+            for item in itens:
+                ItensReserva.objects.create(
+                    reserva=reserva,
+                    **item
+                )
+
+        return super().update(reserva, validated_data)
 
 
 class ItensReservaListSerializer(ModelSerializer):
