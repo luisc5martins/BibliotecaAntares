@@ -30,7 +30,7 @@ class LivroListSerializer(ModelSerializer):
 
     class Meta:
         model = Livro
-        fields = ('id', 'titulo', 'capa', 'status', 'sinopse')
+        fields = ('id', 'titulo', 'quantidade','capa', 'status', 'sinopse')
 
 class LivroMaisReservadoSerializer(ModelSerializer):
     total_reservas = IntegerField()

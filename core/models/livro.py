@@ -20,6 +20,7 @@ class Livro(models.Model):
 
     titulo = models.CharField(max_length=255)
     isbn = models.CharField(max_length=32, null=True, blank=True)
+    quantidade = models.PositiveIntegerField(default=0)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DISPONIVEL)
     sinopse = models.TextField(
         blank=True,
@@ -30,4 +31,4 @@ class Livro(models.Model):
     autores = models.ManyToManyField(Autor, related_name='livros', blank=True)
 
     def __str__(self):
-        return f'({self.id}) {self.titulo} ({self.status}) {self.titulo}'
+        return f'({self.id}) {self.titulo} {self.isbn} {self.quantidade} ({self.status}) {self.sinopse}'

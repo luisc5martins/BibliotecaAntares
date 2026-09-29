@@ -5,7 +5,7 @@ from rest_framework.serializers import (
     HiddenField,
     ValidationError,
 )
-from core.models import Reserva, ItensReserva
+from core.models import Reserva, ItensReserva, Livro
 from django.db import transaction
 
 class ItensReservaSerializer(ModelSerializer):
@@ -63,12 +63,34 @@ class ReservaCreateUpdateSerializer(ModelSerializer):
                 'É necessário devolver o livro antes de fazer uma nova reserva.'
             )
 
+        # Verifica se o livro está disponível
+        for item in itens:
+            livro = item['livro']
+
+            if livro.quantidade <= 0:
+                raise ValidationError(
+                    f'O livro "{livro.titulo}" não está disponível para reserva.'
+                )
+
+        # Cria a reserva
         reserva = Reserva.objects.create(**validated_data)
 
+        # Diminui a quantidade disponível
         for item in itens:
+            livro = item['livro']
+
+            livro.quantidade -= 1
+
+            if livro.quantidade == 0:
+                livro.status = Livro.Status.RESERVADO
+            else:
+                livro.status = Livro.Status.DISPONIVEL
+
+            livro.save(update_fields=['quantidade', 'status'])
+
             ItensReserva.objects.create(
                 reserva=reserva,
-                **item
+                livro=livro
             )
 
         return reserva
@@ -88,7 +110,6 @@ class ReservaCreateUpdateSerializer(ModelSerializer):
 
         return super().update(reserva, validated_data)
 
-
 class ItensReservaListSerializer(ModelSerializer):
     livro = CharField(source='livro.titulo', read_only=True)
 
@@ -104,4 +125,4 @@ class ReservaListSerializer(ModelSerializer):
 
     class Meta:
         model = Reserva
-        fields = ('id', 'usuario', 'itens', 'data_criacao', "status",)
+        fields = ('id', 'usuario', 'itens', 'data_criacao', 'status')
