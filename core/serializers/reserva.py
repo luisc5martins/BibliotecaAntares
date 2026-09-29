@@ -99,8 +99,9 @@ class ItensReservaListSerializer(ModelSerializer):
 
 class ReservaListSerializer(ModelSerializer):
     usuario = CharField(source='usuario.email', read_only=True)
+    status = CharField(source='get_status_display', read_only=True)
     itens = ItensReservaListSerializer(many=True, read_only=True)
 
     class Meta:
         model = Reserva
-        fields = ('id', 'usuario', 'itens')
+        fields = ('id', 'usuario', 'itens', 'data_criacao', "status",)
