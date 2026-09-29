@@ -16,6 +16,13 @@ class ReservaViewSet(ModelViewSet):
     queryset = Reserva.objects.all()
     serializer_class = ReservaSerializer
     permission_classes = [IsAuthenticated]
+
+    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
+    filterset_fields = ['usuario__email', 'status', 'data_criacao']
+    search_fields = ['usuario__email']
+    ordering_fields = ['usuario__email', 'status', 'data_criacao']
+    ordering = ['-data_criacao']
+
     http_method_names = ['get', 'post', 'put', 'delete']
 
     def get_queryset(self):
@@ -24,13 +31,51 @@ class ReservaViewSet(ModelViewSet):
         if usuario.is_superuser:
             return Reserva.objects.all()
 
-        if usuario.groups.filter(name='administradores').exists():
+        if usuario.groups.filter(name='Administradores').exists():
             return Reserva.objects.all()
 
         return Reserva.objects.filter(usuario=usuario)
 
+    def is_admin(self):
+        usuario = self.request.user
+
+        return (
+            usuario.is_superuser
+            or usuario.groups.filter(name='Administradores').exists()
+        )
+
+    def update(self, request, *args, **kwargs):
+        if not self.is_admin():
+            return Response(
+                {
+                    'detail': 'Você não tem permissão para alterar reservas.'
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if not self.is_admin():
+            return Response(
+                {
+                    'detail': 'Você não tem permissão para excluir reservas.'
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def relatorio_reservas_mes(self, request):
+        if not self.is_admin():
+            return Response(
+                {
+                    'detail': 'Você não tem permissão para acessar este relatório.'
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         agora = timezone.now()
 
         inicio_mes = agora.replace(
@@ -54,15 +99,25 @@ class ReservaViewSet(ModelViewSet):
             },
             status=status.HTTP_200_OK,
         )
+
     @extend_schema(
         request=None,
-        responses={200: None, 400: None},
+        responses={200: None, 400: None, 403: None},
         description="Finaliza a reserva e marca os livros como reservados.",
         summary="Finalizar reserva",
     )
     @action(detail=True, methods=['post'])
     @transaction.atomic
     def finalizar(self, request, pk=None):
+
+        if not self.is_admin():
+            return Response(
+                {
+                    'detail': 'Você não tem permissão para finalizar reservas.'
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         reserva = self.get_object()
 
         if reserva.status == Reserva.StatusReserva.RESERVADO:
@@ -99,16 +154,10 @@ class ReservaViewSet(ModelViewSet):
         )
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
+        if self.action in ['create', 'update']:
             return ReservaCreateUpdateSerializer
 
         if self.action == 'list':
             return ReservaListSerializer
 
         return ReservaSerializer
-
-filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
-filterset_fields = ['usuario__email', 'status', 'data_criacao']
-search_fields = ['usuario__email']
-ordering_fields = ['usuario__email', 'status', 'data_criacao']
-ordering = ['-data_criacao']
