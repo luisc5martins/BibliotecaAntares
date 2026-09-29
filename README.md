@@ -33,65 +33,6 @@ Centralizar e organizar o gerenciamento da biblioteca da empresa, permitindo que
 
 > **Importante:** livros e registros de empréstimos não são excluídos do sistema. Quando um livro deixa de fazer parte do acervo, sua disponibilidade pode ser alterada, preservando todo o histórico.
 
-## 🔄 Fluxo da Biblioteca
-
-```text
-┌──────────────────┐
-│    Colaborador   │
-│   cria cadastro  │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│ Cadastro pendente│
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│        RH        │
-│ verifica vínculo │
-└────────┬─────────┘
-         │
-    ┌────┴────┐
-    │         │
-    ▼         ▼
- APROVA     RECUSA
-    │
-    ▼
-┌──────────────────┐
-│ Usuário aprovado │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│ Consulta livros  │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│      Reserva     │
-│   Data + Hora    │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│       RH         │
-│ Confirma retirada│
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│    Empréstimo    │
-│   Data + Hora    │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│     Devolução    │
-│   Data + Hora    │
-└──────────────────┘
-```
-
 ## 📖 Controle de empréstimos
 
 Cada empréstimo mantém o histórico das principais etapas:
