@@ -1,6 +1,10 @@
 from rest_framework.viewsets import ModelViewSet
 from core.models import Reserva
-from core.serializers.reserva import ReservaSerializer, ReservaCreateUpdateSerializer, ReservaListSerializer
+from core.serializers.reserva import (
+    ReservaSerializer,
+    ReservaCreateUpdateSerializer,
+    ReservaListSerializer
+)
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
@@ -17,10 +21,28 @@ class ReservaViewSet(ModelViewSet):
     serializer_class = ReservaSerializer
     permission_classes = [IsAuthenticated]
 
-    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
-    filterset_fields = ['usuario__email', 'status', 'data_criacao']
-    search_fields = ['usuario__email']
-    ordering_fields = ['usuario__email', 'status', 'data_criacao']
+    filter_backends = [
+        DjangoFilterBackend,
+        OrderingFilter,
+        SearchFilter
+    ]
+
+    filterset_fields = [
+        'usuario__email',
+        'status',
+        'data_criacao'
+    ]
+
+    search_fields = [
+        'usuario__email'
+    ]
+
+    ordering_fields = [
+        'usuario__email',
+        'status',
+        'data_criacao'
+    ]
+
     ordering = ['-data_criacao']
 
     http_method_names = ['get', 'post', 'put', 'delete']
@@ -141,7 +163,10 @@ class ReservaViewSet(ModelViewSet):
                 )
 
             livro.status = livro.Status.RESERVADO
-            livro.save(update_fields=['status'])
+
+            livro.save(
+                update_fields=['status']
+            )
 
         reserva.status = Reserva.StatusReserva.RESERVADO
         reserva.save()
@@ -149,6 +174,72 @@ class ReservaViewSet(ModelViewSet):
         return Response(
             {
                 'status': 'Reserva finalizada'
+            },
+            status=status.HTTP_200_OK
+        )
+
+    @extend_schema(
+        request=None,
+        responses={200: None, 400: None, 403: None},
+        description="Devolve os livros da reserva e aumenta a quantidade disponível.",
+        summary="Devolver reserva",
+    )
+    @action(detail=True, methods=['post'])
+    @transaction.atomic
+    def devolver(self, request, pk=None):
+
+        if not self.is_admin():
+            return Response(
+                {
+                    'detail': 'Você não tem permissão para devolver reservas.'
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        reserva = self.get_object()
+
+        # Impede que a mesma reserva seja devolvida duas vezes
+        if reserva.status == Reserva.StatusReserva.DEVOLVIDO:
+            return Response(
+                {
+                    'status': 'A reserva já foi devolvida.'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Só permite devolver reservas ativas
+        if reserva.status not in [
+            Reserva.StatusReserva.RESERVADO,
+            Reserva.StatusReserva.RETIRADO
+        ]:
+            return Response(
+                {
+                    'status': 'A reserva não pode ser devolvida.'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Devolve os livros
+        for item in reserva.itens.all():
+            livro = item.livro
+
+            livro.quantidade += 1
+            livro.status = livro.Status.DISPONIVEL
+
+            livro.save(
+                update_fields=[
+                    'quantidade',
+                    'status'
+                ]
+            )
+
+        # Marca a reserva como devolvida
+        reserva.status = Reserva.StatusReserva.DEVOLVIDO
+        reserva.save()
+
+        return Response(
+            {
+                'status': 'Reserva devolvida com sucesso'
             },
             status=status.HTTP_200_OK
         )

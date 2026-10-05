@@ -48,7 +48,7 @@ class ReservaCreateUpdateSerializer(ModelSerializer):
     def create(self, validated_data):
         itens = validated_data.pop('itens', [])
         usuario = validated_data['usuario']
-
+    
         reserva_ativa = Reserva.objects.filter(
             usuario=usuario,
             status__in=[
@@ -56,43 +56,33 @@ class ReservaCreateUpdateSerializer(ModelSerializer):
                 Reserva.StatusReserva.RETIRADO,
             ]
         ).exists()
-
+    
         if reserva_ativa:
             raise ValidationError(
                 'O usuário já possui uma reserva ativa. '
                 'É necessário devolver o livro antes de fazer uma nova reserva.'
             )
-
-        # Verifica se o livro está disponível
+    
+        # Verifica se todos os livros possuem quantidade disponível
         for item in itens:
             livro = item['livro']
-
+    
             if livro.quantidade <= 0:
                 raise ValidationError(
                     f'O livro "{livro.titulo}" não está disponível para reserva.'
                 )
-
+    
         # Cria a reserva
         reserva = Reserva.objects.create(**validated_data)
-
-        # Diminui a quantidade disponível
+    
+        # Cria os itens.
+        # O ItensReserva.save() é quem diminui a quantidade.
         for item in itens:
-            livro = item['livro']
-
-            livro.quantidade -= 1
-
-            if livro.quantidade == 0:
-                livro.status = Livro.Status.RESERVADO
-            else:
-                livro.status = Livro.Status.DISPONIVEL
-
-            livro.save(update_fields=['quantidade', 'status'])
-
             ItensReserva.objects.create(
                 reserva=reserva,
-                livro=livro
+                livro=item['livro']
             )
-
+    
         return reserva
 
     @transaction.atomic

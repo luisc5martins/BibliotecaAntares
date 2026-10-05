@@ -1,8 +1,11 @@
-from django.db import models
+from django.db import models, transaction
+
 from .livro import Livro
 from .user import User
 
+
 class Reserva(models.Model):
+
     class StatusReserva(models.IntegerChoices):
         RESERVADO = 1, 'Reservado'
         RETIRADO = 2, 'Retirado'
@@ -13,10 +16,12 @@ class Reserva(models.Model):
         on_delete=models.PROTECT,
         related_name='reservas'
     )
+
     status = models.IntegerField(
         choices=StatusReserva.choices,
         default=StatusReserva.RESERVADO
     )
+
     data_criacao = models.DateTimeField(
         auto_now_add=True
     )
@@ -26,19 +31,57 @@ class Reserva(models.Model):
     )
 
     def save(self, *args, **kwargs):
+
+        status_anterior = None
+
+        if self.pk:
+            status_anterior = (
+                Reserva.objects
+                .filter(pk=self.pk)
+                .values_list('status', flat=True)
+                .first()
+            )
+
         super().save(*args, **kwargs)
 
-        for item in self.itens.all():
-            if self.status in [
-                self.StatusReserva.RESERVADO,
-                self.StatusReserva.RETIRADO
-            ]:
-                item.livro.status = Livro.Status.RESERVADO
+        # Só devolve o livro quando a reserva
+        # MUDA para DEVOLVIDO.
+        if (
+            self.status == self.StatusReserva.DEVOLVIDO
+            and status_anterior != self.StatusReserva.DEVOLVIDO
+        ):
+            for item in self.itens.all():
 
-            elif self.status == self.StatusReserva.DEVOLVIDO:
-                item.livro.status = Livro.Status.DISPONIVEL
+                livro = item.livro
 
-            item.livro.save(update_fields=['status'])
+                livro.quantidade += 1
+                livro.status = Livro.Status.DISPONIVEL
+
+                livro.save(
+                    update_fields=[
+                        'quantidade',
+                        'status'
+                    ]
+                )
+
+        # RESERVADO ou RETIRADO não altera quantidade.
+        elif self.status in [
+            self.StatusReserva.RESERVADO,
+            self.StatusReserva.RETIRADO
+        ]:
+            for item in self.itens.all():
+
+                livro = item.livro
+
+                if livro.quantidade == 0:
+                    livro.status = Livro.Status.RESERVADO
+                else:
+                    livro.status = Livro.Status.DISPONIVEL
+
+                livro.save(
+                    update_fields=['status']
+                )
+
 
 class ItensReserva(models.Model):
     reserva = models.ForeignKey(
@@ -53,16 +96,32 @@ class ItensReserva(models.Model):
         related_name='itens_reserva'
     )
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
+        if self.pk is None:
+            if self.reserva.status == Reserva.StatusReserva.DEVOLVIDO:
+                raise ValueError(
+                    'Não é possível adicionar itens a uma reserva devolvida.'
+                )
+
+            livro = Livro.objects.select_for_update().get(pk=self.livro_id)
+
+            if livro.quantidade <= 0:
+                raise ValueError(
+                    f'O livro "{livro.titulo}" não possui '
+                    'quantidade disponível.'
+                )
+
+            livro.quantidade -= 1
+            livro.save(update_fields=['quantidade'])
+
         super().save(*args, **kwargs)
 
-        if self.reserva.status in [
-            Reserva.StatusReserva.RESERVADO,
-            Reserva.StatusReserva.RETIRADO
-        ]:
-            self.livro.status = Livro.Status.RESERVADO
+    @transaction.atomic
+    def delete(self, *args, **kwargs):
+        if self.reserva.status != Reserva.StatusReserva.DEVOLVIDO:
+            livro = Livro.objects.select_for_update().get(pk=self.livro_id)
+            livro.quantidade += 1
+            livro.save(update_fields=['quantidade'])
 
-        elif self.reserva.status == Reserva.StatusReserva.DEVOLVIDO:
-            self.livro.status = Livro.Status.DISPONIVEL
-
-        self.livro.save(update_fields=['status'])
+        return super().delete(*args, **kwargs)
