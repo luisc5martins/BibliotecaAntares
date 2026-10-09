@@ -6,7 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from drf_spectacular.utils import extend_schema
-
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from core.models import Livro, Reserva
 from core.serializers import LivroSerializer
 from core.serializers.livro import (
@@ -14,8 +15,16 @@ from core.serializers.livro import (
     LivroListSerializer,
     LivroRetrieveSerializer
 )
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import permission_classes
 
-
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def listar_formatos(request):
+    return Response([
+        {'valor': valor, 'descricao': descricao}
+        for valor, descricao in Livro.Formato.choices
+    ])
 class LivroViewSet(ModelViewSet):
     queryset = Livro.objects.all()
     serializer_class = LivroSerializer
@@ -30,6 +39,7 @@ class LivroViewSet(ModelViewSet):
         'categoria__descricao',
         'editora__nome',
         'autores__nome',
+        'formato',
     ]
 
     search_fields = [

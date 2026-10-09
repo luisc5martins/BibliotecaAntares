@@ -19,6 +19,8 @@ from core.views import (
     UserViewSet,
 )
 from core.views import CategoriaViewSet, UserViewSet, EditoraViewSet, AutorViewSet, LivroViewSet, ReservaViewSet
+from django.urls import path
+from core.views.livro import listar_formatos
 
 router = DefaultRouter()
 
@@ -52,5 +54,6 @@ urlpatterns = [
     # API
     path('api/', include(router.urls)),
     path('api/media/', include(uploader_router.urls)),
+    path('api/formatos/', listar_formatos, name='listar-formatos'),
 ]
 urlpatterns += static(settings.MEDIA_ENDPOINT, document_root=settings.MEDIA_ROOT)
