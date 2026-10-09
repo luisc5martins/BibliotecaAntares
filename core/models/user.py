@@ -21,7 +21,11 @@ class UserManager(BaseUserManager):
         if not email:
             raise ValueError('Users must have an email address.')
 
-        user = self.model(email=self.normalize_email(email), **extra_fields)
+        user = self.model(
+            email=self.normalize_email(email),
+            **extra_fields
+        )
+
         user.set_password(password)
         user.save(using=self._db)
 
@@ -37,14 +41,57 @@ class UserManager(BaseUserManager):
         return user
 
 
+def imagem_usuario_default():
+    try:
+        return Image.objects.get(
+            description='userDefault'
+        ).pk
+    except Image.DoesNotExist:
+        return None
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     """User model in the system."""
 
-    foto = models.ForeignKey(Image, related_name='user_foto', on_delete=models.SET_NULL, null=True, blank=True, default='./media/default/userDefault.png',)
-    email = models.EmailField(max_length=255, unique=True, verbose_name=_('email'), help_text=_('Email'))
-    name = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('name'), help_text=_('Username'))
-    is_active = models.BooleanField(default=True, verbose_name=_('Usuário está ativo'), help_text=_('Indica que este usuário está ativo.'))
-    is_staff = models.BooleanField(default=False, verbose_name=_('Usuário é da equipe'), help_text=_('Indica que este usuário pode acessar o Admin'),)
+    foto = models.ForeignKey(
+        Image,
+        related_name='user_foto',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=imagem_usuario_default,
+    )
+
+    email = models.EmailField(
+        max_length=255,
+        unique=True,
+        verbose_name=_('email'),
+        help_text=_('Email')
+    )
+
+    name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name=_('name'),
+        help_text=_('Username')
+    )
+
+    is_active = models.BooleanField(
+        default=False,
+        verbose_name=_('Usuário está ativo'),
+        help_text=_(
+            'Indica que este usuário está ativo.'
+        )
+    )
+
+    is_staff = models.BooleanField(
+        default=False,
+        verbose_name=_('Usuário é da equipe'),
+        help_text=_(
+            'Indica que este usuário pode acessar o Admin'
+        ),
+    )
 
     objects = UserManager()
 
