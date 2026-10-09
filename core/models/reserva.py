@@ -10,6 +10,7 @@ class Reserva(models.Model):
         RESERVADO = 1, 'Reservado'
         RETIRADO = 2, 'Retirado'
         DEVOLVIDO = 3, 'Devolvido'
+        CANCELADO = 4, 'Cancelado'
 
     usuario = models.ForeignKey(
         User,
@@ -44,11 +45,16 @@ class Reserva(models.Model):
 
         super().save(*args, **kwargs)
 
-        # Só devolve o livro quando a reserva
-        # MUDA para DEVOLVIDO.
+        # DEVOLVIDO ou CANCELADO
         if (
-            self.status == self.StatusReserva.DEVOLVIDO
-            and status_anterior != self.StatusReserva.DEVOLVIDO
+            self.status in [
+                self.StatusReserva.DEVOLVIDO,
+                self.StatusReserva.CANCELADO
+            ]
+            and status_anterior not in [
+                self.StatusReserva.DEVOLVIDO,
+                self.StatusReserva.CANCELADO
+            ]
         ):
             for item in self.itens.all():
 
@@ -64,7 +70,7 @@ class Reserva(models.Model):
                     ]
                 )
 
-        # RESERVADO ou RETIRADO não altera quantidade.
+        # RESERVADO ou RETIRADO
         elif self.status in [
             self.StatusReserva.RESERVADO,
             self.StatusReserva.RETIRADO
@@ -84,6 +90,7 @@ class Reserva(models.Model):
 
 
 class ItensReserva(models.Model):
+
     reserva = models.ForeignKey(
         Reserva,
         on_delete=models.CASCADE,
@@ -98,13 +105,21 @@ class ItensReserva(models.Model):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
+
         if self.pk is None:
-            if self.reserva.status == Reserva.StatusReserva.DEVOLVIDO:
+
+            if self.reserva.status in [
+                Reserva.StatusReserva.DEVOLVIDO,
+                Reserva.StatusReserva.CANCELADO
+            ]:
                 raise ValueError(
-                    'Não é possível adicionar itens a uma reserva devolvida.'
+                    'Não é possível adicionar itens a uma reserva '
+                    'devolvida ou cancelada.'
                 )
 
-            livro = Livro.objects.select_for_update().get(pk=self.livro_id)
+            livro = Livro.objects.select_for_update().get(
+                pk=self.livro_id
+            )
 
             if livro.quantidade <= 0:
                 raise ValueError(
@@ -119,8 +134,15 @@ class ItensReserva(models.Model):
 
     @transaction.atomic
     def delete(self, *args, **kwargs):
-        if self.reserva.status != Reserva.StatusReserva.DEVOLVIDO:
-            livro = Livro.objects.select_for_update().get(pk=self.livro_id)
+
+        if self.reserva.status not in [
+            Reserva.StatusReserva.DEVOLVIDO,
+            Reserva.StatusReserva.CANCELADO
+        ]:
+            livro = Livro.objects.select_for_update().get(
+                pk=self.livro_id
+            )
+
             livro.quantidade += 1
             livro.save(update_fields=['quantidade'])
 

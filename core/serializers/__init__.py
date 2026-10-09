@@ -12,4 +12,3 @@ from .reserva import (
     ItensReservaListSerializer,
     ItensReservaSerializer,
 )
-...

@@ -63,7 +63,6 @@ class ReservaCreateUpdateSerializer(ModelSerializer):
                 'É necessário devolver o livro antes de fazer uma nova reserva.'
             )
     
-        # Verifica se todos os livros possuem quantidade disponível
         for item in itens:
             livro = item['livro']
     
@@ -72,11 +71,8 @@ class ReservaCreateUpdateSerializer(ModelSerializer):
                     f'O livro "{livro.titulo}" não está disponível para reserva.'
                 )
     
-        # Cria a reserva
         reserva = Reserva.objects.create(**validated_data)
     
-        # Cria os itens.
-        # O ItensReserva.save() é quem diminui a quantidade.
         for item in itens:
             ItensReserva.objects.create(
                 reserva=reserva,
